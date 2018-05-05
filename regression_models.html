@@ -1,0 +1,440 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>regression_models</title><meta name="generator" content="MATLAB 9.2"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2018-05-05"><meta name="DC.source" content="regression_models.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h2>Contents</h2><div><ul><li><a href="#2">Extract data from xls sheet</a></li><li><a href="#3">Create table of data</a></li><li><a href="#4">GLME 1: Surface and condition</a></li><li><a href="#5">ODDS Ratio</a></li><li><a href="#6">GLME 2: Physiological parameters</a></li><li><a href="#7">GLME 3: Gait parameters</a></li></ul></div><pre class="codeinput"><span class="comment">% This script runs regression models for the turn style preference paper</span>
+<span class="comment">%</span>
+<span class="comment">% Last updated by Philippe C. Dixon May 5th, 2018</span>
+<span class="comment">%</span>
+<span class="comment">% Instructions:</span>
+<span class="comment">% - Run each cell in sequence by selecting the cell and clicking 'run section'</span>
+<span class="comment">% - Inspect output from each cell</span>
+
+clear <span class="string">all</span>
+close <span class="string">all</span>
+</pre><h2 id="2">Extract data from xls sheet</h2><p>- select the supplemental data spreadsheet called 'data.xls'</p><pre class="codeinput">[f,p] = uigetfile(<span class="string">'*.xls'</span>);                                      <span class="comment">% select xls file</span>
+cd(p)
+[num,txt,raw] = xlsread([p,f],<span class="string">'styles'</span>);
+
+subject   = raw(2:end,1);
+trial     = raw(2:end,2);
+trialType = raw(2:end,3);
+isStep    = raw(2:end,4);
+surface   = raw(2:end,5);
+condition = raw(2:end,6);
+age       = raw(2:end,7);
+sex       = raw(2:end,8);
+mass      = raw(2:end,9);
+height    = raw(2:end,10);
+BMI       = raw(2:end,11);
+balance   = raw(2:end,12);
+reaction  = raw(2:end,13);
+strength  = raw(2:end,14);
+SRegRV	  = raw(2:end,15);
+StrRegRV  = raw(2:end,16);
+maxRV	  = raw(2:end,17);
+SPARCRV	  = raw(2:end,18);
+</pre><h2 id="3">Create table of data</h2><p>- variable types are updated to correct format</p><pre class="codeinput">varNames = {<span class="string">'subject'</span>,<span class="string">'trial'</span>,<span class="string">'trialType'</span>,<span class="string">'age'</span>,<span class="string">'sex'</span>,<span class="string">'mass'</span>,<span class="string">'height'</span>,<span class="string">'BMI'</span>,<span class="keyword">...</span>
+            <span class="string">'balance'</span>,<span class="string">'reaction'</span>,<span class="string">'strength'</span>,<span class="string">'surface'</span>,<span class="string">'condition'</span>,<span class="keyword">...</span>
+            <span class="string">'SRegRV'</span>,<span class="string">'StrRegRV'</span>,<span class="string">'maxRV'</span>,<span class="string">'SPARCRV'</span>,<span class="string">'isStep'</span>};
+
+tbl = table(subject,trial,trialType,age,sex,mass,height,BMI,balance,reaction,<span class="keyword">...</span>
+            strength,surface,condition,SRegRV,StrRegRV,maxRV,<span class="keyword">...</span>
+            SPARCRV,isStep,<span class="string">'VariableNames'</span>,varNames);
+
+tbl.trialType  = categorical(tbl.trialType,<span class="string">'Ordinal'</span>,false);      <span class="comment">% convert to nominal</span>
+tbl.surface    = categorical(tbl.surface,<span class="string">'Ordinal'</span>,false);        <span class="comment">% convert to nominal</span>
+tbl.condition  = categorical(tbl.condition,<span class="string">'Ordinal'</span>,false);      <span class="comment">% convert to nominal</span>
+tbl.sex        = categorical(tbl.sex,<span class="string">'Ordinal'</span>,false);            <span class="comment">% convert to nominal</span>
+tbl.age        = cell2mat(tbl.age);                               <span class="comment">% convert to numeric</span>
+tbl.mass       = cell2mat(tbl.mass);                              <span class="comment">% convert to numeric</span>
+tbl.height     = cell2mat(tbl.height);                            <span class="comment">% convert to numeric</span>
+tbl.BMI        = cell2mat(tbl.BMI);                               <span class="comment">% convert to numeric</span>
+tbl.balance    = cell2mat(tbl.balance);                           <span class="comment">% convert to numeric</span>
+tbl.reaction   = cell2mat(tbl.reaction);                          <span class="comment">% convert to numeric</span>
+tbl.strength   = cell2mat(tbl.strength);                          <span class="comment">% convert to numeric</span>
+tbl.isStep     = cell2mat(tbl.isStep);                            <span class="comment">% convert to numeric</span>
+tbl.subject    = categorical(tbl.subject);                        <span class="comment">% conver to string</span>
+tbl.SRegRV	   = cell2mat(tbl.SRegRV);                            <span class="comment">% convert to numeric</span>
+tbl.StrRegRV   = cell2mat(tbl.StrRegRV);                          <span class="comment">% convert to numeric</span>
+tbl.maxRV	   = cell2mat(tbl.maxRV);                             <span class="comment">% convert to numeric</span>
+tbl.SPARCRV	   = cell2mat(tbl.SPARCRV);                           <span class="comment">% convert to numeric</span>
+</pre><h2 id="4">GLME 1: Surface and condition</h2><pre class="codeinput">mdl1 = <span class="string">'isStep~ 1 + surface + condition + (1|subject)'</span>;
+glme1 = fitglme(tbl,mdl1,<span class="string">'Distribution'</span>,<span class="string">'binomial'</span>)
+
+<span class="comment">% Results</span>
+<span class="comment">% surface   p = 0.073</span>
+<span class="comment">% condition p &lt; 0.001*</span>
+</pre><pre class="codeoutput">
+glme1 = 
+
+
+Generalized linear mixed-effects model fit by PL
+
+Model information:
+    Number of observations             520
+    Fixed effects coefficients           3
+    Random effects coefficients         17
+    Covariance parameters                1
+    Distribution                    Binomial
+    Link                            Logit 
+    FitMethod                       MPL   
+
+Formula:
+    isStep ~ 1 + surface + condition + (1 | subject)
+
+Model fit statistics:
+    AIC       BIC       LogLikelihood    Deviance
+    2257.5    2274.5    -1124.7          2249.5  
+
+Fixed effects coefficients (95% CIs):
+    Name                           Estimate    SE         tStat      DF 
+    '(Intercept)'                  -0.28158     0.2152    -1.3085    517
+    'surface_Uneven'               -0.32948    0.18328    -1.7977    517
+    'condition_pre-planned'         0.71415    0.18413     3.8784    517
+
+
+    pValue        Lower       Upper   
+        0.1913    -0.70435     0.14119
+      0.072815    -0.68955    0.030591
+    0.00011869     0.35241      1.0759
+
+Random effects covariance parameters:
+Group: subject (17 Levels)
+    Name1                Name2                Type         Estimate
+    '(Intercept)'        '(Intercept)'        'std'        0.59691 
+
+Group: Error
+    Name                      Estimate
+    'sqrt(Dispersion)'        1       
+
+</pre><h2 id="5">ODDS Ratio</h2><pre class="codeinput">spin_by_condition = grpstats(tbl,{<span class="string">'condition'</span>,<span class="string">'trialType'</span>},<span class="string">'mean'</span>,<span class="string">'DataVar'</span>,<span class="string">'isStep'</span>)
+gcount = spin_by_condition.GroupCount;
+x = table([gcount(1);gcount(2)],[gcount(3);gcount(4)],<span class="string">'VariableNames'</span>,{<span class="string">'Step'</span>,<span class="string">'Spin'</span>},<span class="string">'RowNames'</span>,{<span class="string">'pre-planned'</span>,<span class="string">'late-cue'</span>})
+[~,~,stats] = fishertest(x)
+
+<span class="comment">% Results</span>
+<span class="comment">%</span>
+<span class="comment">%  OddsRatio: 1.9323</span>
+<span class="comment">%  ConfidenceInterval: [1.3629 2.7395]</span>
+</pre><pre class="codeoutput">
+spin_by_condition =
+
+  4&times;4 table
+
+                         condition     trialType    GroupCount    mean_isStep
+                        ___________    _________    __________    ___________
+
+    late-cue_Spin       late-cue       Spin         151           0          
+    late-cue_Step       late-cue       Step         100           1          
+    pre-planned_Spin    pre-planned    Spin         118           0          
+    pre-planned_Step    pre-planned    Step         151           1          
+
+
+x =
+
+  2&times;2 table
+
+                   Step    Spin
+                   ____    ____
+
+    pre-planned    151     118 
+    late-cue       100     151 
+
+
+stats = 
+
+  struct with fields:
+
+             OddsRatio: 1.9323
+    ConfidenceInterval: [1.3629 2.7395]
+
+</pre><h2 id="6">GLME 2: Physiological parameters</h2><pre class="codeinput">mdl2 = <span class="string">'isStep~ 1 + balance + strength + reaction  + (1|subject)'</span>;
+glme2 = fitglme(tbl,mdl2,<span class="string">'Distribution'</span>,<span class="string">'binomial'</span>)
+
+<span class="comment">% Results</span>
+<span class="comment">% balance   p = 0.136</span>
+<span class="comment">% reaction  p = 0.241</span>
+<span class="comment">% strength  p = 0.811</span>
+</pre><pre class="codeoutput">
+glme2 = 
+
+
+Generalized linear mixed-effects model fit by PL
+
+Model information:
+    Number of observations             456
+    Fixed effects coefficients           4
+    Random effects coefficients         15
+    Covariance parameters                1
+    Distribution                    Binomial
+    Link                            Logit 
+    FitMethod                       MPL   
+
+Formula:
+    isStep ~ 1 + balance + reaction + strength + (1 | subject)
+
+Model fit statistics:
+    AIC       BIC     LogLikelihood    Deviance
+    1969.4    1990    -979.68          1959.4  
+
+Fixed effects coefficients (95% CIs):
+    Name                 Estimate    SE          tStat      DF     pValue  
+    '(Intercept)'        -5.0376       2.9968     -1.681    452    0.093447
+    'balance'            0.14353     0.096022     1.4947    452     0.13568
+    'reaction'            2.5454       2.1692     1.1734    452     0.24126
+    'strength'           0.18785      0.78319    0.23986    452     0.81055
+
+
+    Lower        Upper  
+      -10.927    0.85166
+    -0.045179    0.33223
+      -1.7177     6.8084
+      -1.3513      1.727
+
+Random effects covariance parameters:
+Group: subject (15 Levels)
+    Name1                Name2                Type         Estimate
+    '(Intercept)'        '(Intercept)'        'std'        0.55753 
+
+Group: Error
+    Name                      Estimate
+    'sqrt(Dispersion)'        1       
+
+</pre><h2 id="7">GLME 3: Gait parameters</h2><pre class="codeinput">mdl3 = <span class="string">'isStep~ 1 + SRegRV + StrRegRV + maxRV + SPARCRV + (1|subject)'</span>;
+glme3 = fitglme(tbl,mdl3,<span class="string">'Distribution'</span>,<span class="string">'binomial'</span>)
+
+<span class="comment">% Resuls</span>
+<span class="comment">% SRegRV'    p = 0.218</span>
+<span class="comment">% StrRegRV'  p = 0.010*</span>
+<span class="comment">% maxRV'     p = 0.039*</span>
+<span class="comment">% SPARCRV'   p = 0.105</span>
+</pre><pre class="codeoutput">
+glme3 = 
+
+
+Generalized linear mixed-effects model fit by PL
+
+Model information:
+    Number of observations             520
+    Fixed effects coefficients           5
+    Random effects coefficients         17
+    Covariance parameters                1
+    Distribution                    Binomial
+    Link                            Logit 
+    FitMethod                       MPL   
+
+Formula:
+    isStep ~ 1 + SRegRV + StrRegRV + maxRV + SPARCRV + (1 | subject)
+
+Model fit statistics:
+    AIC       BIC       LogLikelihood    Deviance
+    2259.4    2284.9    -1123.7          2247.4  
+
+Fixed effects coefficients (95% CIs):
+    Name                 Estimate    SE         tStat      DF     pValue  
+    '(Intercept)'          2.2357    0.99153     2.2548    515    0.024562
+    'SRegRV'               1.2335     1.0004     1.2331    515     0.21811
+    'StrRegRV'            -2.3809    0.92591    -2.5714    515    0.010407
+    'maxRV'              -0.45322    0.21917    -2.0679    515    0.039149
+    'SPARCRV'              0.3553    0.21866     1.6249    515     0.10479
+
+
+    Lower        Upper    
+      0.28781       4.1837
+     -0.73176       3.1988
+      -4.1999     -0.56189
+     -0.88379    -0.022643
+    -0.074271      0.78487
+
+Random effects covariance parameters:
+Group: subject (17 Levels)
+    Name1                Name2                Type         Estimate
+    '(Intercept)'        '(Intercept)'        'std'        0.57497 
+
+Group: Error
+    Name                      Estimate
+    'sqrt(Dispersion)'        1       
+
+</pre><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2017a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+% This script runs regression models for the turn style preference paper
+%
+% Last updated by Philippe C. Dixon May 5th, 2018
+%
+% Instructions: 
+% - Run each cell in sequence by selecting the cell and clicking 'run section'
+% - Inspect output from each cell
+
+clear all
+close all
+
+%% Extract data from xls sheet
+% - select the supplemental data spreadsheet called 'data.xls' 
+
+[f,p] = uigetfile('*.xls');                                      % select xls file
+cd(p)
+[num,txt,raw] = xlsread([p,f],'styles');
+
+subject   = raw(2:end,1);
+trial     = raw(2:end,2);
+trialType = raw(2:end,3);
+isStep    = raw(2:end,4);
+surface   = raw(2:end,5);
+condition = raw(2:end,6);
+age       = raw(2:end,7);
+sex       = raw(2:end,8);
+mass      = raw(2:end,9);
+height    = raw(2:end,10);
+BMI       = raw(2:end,11);
+balance   = raw(2:end,12);        
+reaction  = raw(2:end,13);        
+strength  = raw(2:end,14);        
+SRegRV	  = raw(2:end,15);
+StrRegRV  = raw(2:end,16);
+maxRV	  = raw(2:end,17);
+SPARCRV	  = raw(2:end,18);
+
+
+%% Create table of data
+% - variable types are updated to correct format
+
+
+varNames = {'subject','trial','trialType','age','sex','mass','height','BMI',...
+            'balance','reaction','strength','surface','condition',...
+            'SRegRV','StrRegRV','maxRV','SPARCRV','isStep'};
+        
+tbl = table(subject,trial,trialType,age,sex,mass,height,BMI,balance,reaction,...
+            strength,surface,condition,SRegRV,StrRegRV,maxRV,...
+            SPARCRV,isStep,'VariableNames',varNames);
+
+tbl.trialType  = categorical(tbl.trialType,'Ordinal',false);      % convert to nominal
+tbl.surface    = categorical(tbl.surface,'Ordinal',false);        % convert to nominal
+tbl.condition  = categorical(tbl.condition,'Ordinal',false);      % convert to nominal
+tbl.sex        = categorical(tbl.sex,'Ordinal',false);            % convert to nominal
+tbl.age        = cell2mat(tbl.age);                               % convert to numeric
+tbl.mass       = cell2mat(tbl.mass);                              % convert to numeric
+tbl.height     = cell2mat(tbl.height);                            % convert to numeric
+tbl.BMI        = cell2mat(tbl.BMI);                               % convert to numeric
+tbl.balance    = cell2mat(tbl.balance);                           % convert to numeric
+tbl.reaction   = cell2mat(tbl.reaction);                          % convert to numeric
+tbl.strength   = cell2mat(tbl.strength);                          % convert to numeric
+tbl.isStep     = cell2mat(tbl.isStep);                            % convert to numeric
+tbl.subject    = categorical(tbl.subject);                        % conver to string  
+tbl.SRegRV	   = cell2mat(tbl.SRegRV);                            % convert to numeric
+tbl.StrRegRV   = cell2mat(tbl.StrRegRV);                          % convert to numeric
+tbl.maxRV	   = cell2mat(tbl.maxRV);                             % convert to numeric
+tbl.SPARCRV	   = cell2mat(tbl.SPARCRV);                           % convert to numeric
+
+%% GLME 1: Surface and condition
+%
+mdl1 = 'isStep~ 1 + surface + condition + (1|subject)';
+glme1 = fitglme(tbl,mdl1,'Distribution','binomial')
+
+% Results
+% surface   p = 0.073
+% condition p < 0.001*
+
+
+%% ODDS Ratio
+%
+spin_by_condition = grpstats(tbl,{'condition','trialType'},'mean','DataVar','isStep')
+gcount = spin_by_condition.GroupCount;
+x = table([gcount(1);gcount(2)],[gcount(3);gcount(4)],'VariableNames',{'Step','Spin'},'RowNames',{'pre-planned','late-cue'})
+[~,~,stats] = fishertest(x)
+
+% Results
+%
+%  OddsRatio: 1.9323
+%  ConfidenceInterval: [1.3629 2.7395]
+
+%% GLME 2: Physiological parameters 
+%
+mdl2 = 'isStep~ 1 + balance + strength + reaction  + (1|subject)';
+glme2 = fitglme(tbl,mdl2,'Distribution','binomial')
+
+% Results 
+% balance   p = 0.136    
+% reaction  p = 0.241      
+% strength  p = 0.811      
+
+
+
+%% GLME 3: Gait parameters
+%  
+mdl3 = 'isStep~ 1 + SRegRV + StrRegRV + maxRV + SPARCRV + (1|subject)';
+glme3 = fitglme(tbl,mdl3,'Distribution','binomial')
+
+% Resuls
+% SRegRV'    p = 0.218     
+% StrRegRV'  p = 0.010*     
+% maxRV'     p = 0.039*     
+% SPARCRV'   p = 0.105    
+
+
+##### SOURCE END #####
+--></body></html>
